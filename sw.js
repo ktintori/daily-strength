@@ -1,5 +1,5 @@
 // Keeps the app working offline. Messages are checked online first so the newest one shows.
-const CACHE = "klarity-v2";
+const CACHE = "klarity-v3";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {

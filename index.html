@@ -31,19 +31,21 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+html { font-size: calc(100% * var(--scale)); -webkit-text-size-adjust: 100%; }
 html, body { margin: 0; }
 body {
   background: var(--bg); color: var(--fg);
-  font-family: var(--body); font-size: calc(18px * var(--scale)); line-height: 1.55;
+  font-family: var(--body); font-size: 1.125rem; line-height: 1.55;
   padding-top: max(24px, env(safe-area-inset-top, 0px));
   padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
   padding-left: max(18px, env(safe-area-inset-left, 0px));
   padding-right: max(18px, env(safe-area-inset-right, 0px));
   min-height: 100vh;
 }
-.wrap { max-width: 40rem; margin: 0 auto; display: grid; gap: 28px; }
+.wrap { max-width: 40rem; margin: 0 auto; display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); }
+main > *, .wrap > * { min-width: 0; max-width: 100%; overflow-wrap: break-word; }
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; min-width: 0; }
 .wordmark { font-family: var(--brand); font-weight: 600; font-size: 1.9rem; letter-spacing: 0.14em; color: var(--gold); text-transform: uppercase; }
 .sub { font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .tools { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -54,12 +56,14 @@ button {
 button[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: #0A0A0A; }
 button:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .horizon { display: grid; justify-items: center; gap: 0; padding-top: 8px; }
+.size { min-width: 56px; padding: 0 14px; font-size: 1.1rem; }
+.size:disabled { opacity: 0.4; cursor: default; }
 .sun { width: 120px; height: 60px; border-radius: 120px 120px 0 0; background: var(--gold); }
 .line { width: min(320px, 80%); height: 3px; background: var(--muted); margin-top: 10px; }
-main { display: grid; gap: 14px; text-align: center; justify-items: center; }
+main { grid-template-columns: minmax(0, 1fr); display: grid; gap: 14px; text-align: center; justify-items: center; }
 .date { font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); }
-h1 { font-family: var(--brand); font-weight: 600; font-size: clamp(2.6rem, 9vw, 3.8rem); line-height: 1.05; margin: 0; text-wrap: balance; }
-.message { font-size: clamp(1.3rem, 4vw, 1.6rem); line-height: 1.6; margin: 0; max-width: 32ch; text-wrap: pretty; }
+h1 { font-family: var(--brand); font-weight: 600; font-size: min(3rem, 15vw); line-height: 1.05; margin: 0; text-wrap: balance; }
+.message { font-size: 1.45rem; width: 100%; max-width: min(32ch, 100%); line-height: 1.6; margin: 0; max-width: 32ch; text-wrap: pretty; }
 .try { width: 100%; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--gold); border-radius: 16px; padding: 18px 20px; display: grid; gap: 6px; text-align: left; }
 .try-label { font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .try p { margin: 0; font-size: 1.15rem; font-weight: 600; }
@@ -85,7 +89,8 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
     <div class="brand"><span class="wordmark">Klarity</span><span class="sub">Daily Strength</span></div>
     <div class="tools">
       <button id="read" type="button" hidden>Read it to me</button>
-      <button id="bigger" type="button" aria-pressed="false">Bigger text</button>
+      <button id="smaller" class="size" type="button" aria-label="Smaller text">A&minus;</button>
+      <button id="bigger" class="size" type="button" aria-label="Bigger text">A+</button>
     </div>
   </header>
 
@@ -147,58 +152,60 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
       li.append(d, f, p); list.appendChild(li);
     });
     el("pastWrap").hidden = past.length === 0;
-    el("read").hidden = !canSpeak;
+    el("read").hidden = false;
   }
 
-  fetch("messages.json", { cache: "no-store" })
-    .then(function (r) { return r.json(); })
-    .then(render)
-    .catch(function () { el("message").textContent = "Can't load today's message. Check your connection and try again."; });
-
-  // Bigger text, remembered on this phone
-  var big = false;
-  try { big = localStorage.getItem("klarity-big") === "1"; } catch (e) {}
-  function applyBig() {
-    document.documentElement.style.setProperty("--scale", big ? "1.25" : "1");
-    el("bigger").setAttribute("aria-pressed", big ? "true" : "false");
+  // Load messages, and check again whenever the app is opened so a new day shows the new message
+  var shownDay = null;
+  function load() {
+    fetch("messages.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (all) { shownDay = localISO(new Date()); render(all); })
+      .catch(function () { if (!current) el("message").textContent = "Can't load today's message. Check your connection and try again."; });
   }
-  applyBig();
-  el("bigger").addEventListener("click", function () {
-    big = !big; applyBig();
-    try { localStorage.setItem("klarity-big", big ? "1" : "0"); } catch (e) {}
-  });
+  load();
+  function maybeReload() { if (document.visibilityState === "visible") load(); }
+  document.addEventListener("visibilitychange", maybeReload);
+  window.addEventListener("pageshow", maybeReload);
+  window.addEventListener("focus", maybeReload);
+  setInterval(function () { if (shownDay && localISO(new Date()) !== shownDay) load(); }, 60000);
 
-  // Read aloud with the phone's own voice
+  // Text size, four steps, remembered on this phone
+  var SIZES = [1, 1.25, 1.5, 1.8];
+  var step = 0;
+  try { step = Math.max(0, Math.min(SIZES.length - 1, parseInt(localStorage.getItem("klarity-size") || "0", 10) || 0)); } catch (e) {}
+  function applySize() {
+    document.documentElement.style.setProperty("--scale", String(SIZES[step]));
+    el("smaller").disabled = step === 0;
+    el("bigger").disabled = step === SIZES.length - 1;
+    try { localStorage.setItem("klarity-size", String(step)); } catch (e) {}
+  }
+  applySize();
+  el("bigger").addEventListener("click", function () { if (step < SIZES.length - 1) { step++; applySize(); } });
+  el("smaller").addEventListener("click", function () { if (step > 0) { step--; applySize(); } });
+
+  // Read aloud: plays the recorded natural voice for the day; uses the phone's voice only if no recording exists
   var synth = window.speechSynthesis;
-  var canSpeak = !!(synth && typeof SpeechSynthesisUtterance !== "undefined");
-  var speaking = false;
-  // Prefer a soft female voice. Names differ by phone and computer, so try the best known ones in order.
-  var PREFERRED = ["Samantha (Enhanced)", "Ava (Premium)", "Ava (Enhanced)", "Zoe (Premium)", "Zoe (Enhanced)", "Allison (Enhanced)",
-    "Samantha", "Ava", "Zoe", "Allison", "Susan",
-    "Microsoft Aria Online (Natural)", "Microsoft Jenny Online (Natural)", "Microsoft Ava Online (Natural)", "Microsoft Zira",
-    "Google US English"];
-  var FEMALE = /samantha|ava|zoe|allison|susan|aria|jenny|zira|female|victoria|karen|moira|tessa|serena/i;
-  function pickVoice() {
-    var voices = (synth && synth.getVoices()) || [];
-    var en = voices.filter(function (v) { return /^en[-_]/i.test(v.lang); });
-    for (var i = 0; i < PREFERRED.length; i++) {
-      var hit = en.filter(function (v) { return v.name.indexOf(PREFERRED[i]) === 0; })[0];
-      if (hit) return hit;
-    }
-    return en.filter(function (v) { return FEMALE.test(v.name) && /en[-_]US/i.test(v.lang); })[0]
-      || en.filter(function (v) { return FEMALE.test(v.name); })[0] || null;
-  }
-  if (synth && synth.getVoices) { synth.getVoices(); if ("onvoiceschanged" in synth) synth.onvoiceschanged = function () {}; }
-  el("read").addEventListener("click", function () {
-    var btn = el("read");
-    if (!current) return;
-    if (speaking) { synth.cancel(); speaking = false; btn.textContent = "Read it to me"; return; }
+  var player = new Audio();
+  player.preload = "none";
+  var playing = false;
+  function idle() { playing = false; el("read").textContent = "Read it to me"; }
+  player.addEventListener("ended", idle);
+  function phoneVoice() {
+    if (!(synth && typeof SpeechSynthesisUtterance !== "undefined")) { idle(); return; }
     var u = new SpeechSynthesisUtterance(current.focus + ". " + current.message + (current.practice ? " Try this today. " + current.practice : ""));
-    u.lang = "en-US"; u.rate = 0.85; u.pitch = 1.05;
-    var v = pickVoice(); if (v) u.voice = v;
-    u.onend = u.onerror = function () { speaking = false; btn.textContent = "Read it to me"; };
-    speaking = true; btn.textContent = "Stop reading";
-    try { synth.speak(u); } catch (e) { speaking = false; btn.textContent = "Read it to me"; }
+    u.lang = "en-US"; u.rate = 0.9;
+    u.onend = u.onerror = idle;
+    synth.speak(u);
+  }
+  el("read").addEventListener("click", function () {
+    if (!current) return;
+    if (playing) { player.pause(); player.currentTime = 0; if (synth) synth.cancel(); idle(); return; }
+    playing = true; el("read").textContent = "Stop reading";
+    player.src = "audio/" + current.date + ".mp3";
+    player.onerror = function () { if (playing) phoneVoice(); };
+    var pr = player.play();
+    if (pr && pr.catch) pr.catch(function () { if (playing) phoneVoice(); });
   });
 
   // How to install, shown only in the browser (not once installed)
@@ -212,7 +219,13 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
   }
 
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").then(function (reg) { reg.update(); }).catch(function () {});
+    });
+    var hadController = !!navigator.serviceWorker.controller, reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (hadController && !reloaded) { reloaded = true; location.reload(); }
+    });
   }
 })();
 </script>

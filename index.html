@@ -137,12 +137,17 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
     var upTo = all.filter(function (m) { return m.date <= today; });
     current = upTo.length ? upTo[upTo.length - 1] : all[0];
     if (!current) { el("message").textContent = "Today's message is on its way. Check back soon."; return; }
-    el("date").textContent = pretty(current.date);
+    // Never run dry: if no message was written for today, bring back an earlier one, a different one each day
+    if (current.date < today && upTo.length) {
+      var p = today.split("-"), dayNum = Math.floor(Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000);
+      current = upTo[dayNum % upTo.length];
+    }
+    el("date").textContent = pretty(today < current.date ? current.date : today);
     el("focus").textContent = current.focus;
     el("message").textContent = current.message;
     el("practice").textContent = current.practice || "";
     el("tryBox").hidden = !current.practice;
-    var past = upTo.filter(function (m) { return m.date < current.date; }).reverse().slice(0, 7);
+    var past = upTo.filter(function (m) { return m.date < today && m !== current; }).reverse().slice(0, 7);
     var list = el("past"); list.textContent = "";
     past.forEach(function (m) {
       var li = document.createElement("li");

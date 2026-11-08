@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Klarity Daily Strength</title>
+<meta name="description" content="A short daily message of strength and belonging.">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Klarity">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;800&family=Cormorant+Garamond:wght@500;600&display=swap">
+<style>
+/* Klarity: black ground, gold light, silver horizon. One dark look, high contrast for low vision. */
+:root {
+  --bg: #0A0A0A;
+  --surface: #151515;
+  --fg: #F4F1EA;
+  --muted: #C0C0C0;
+  --gold: #D4AF37;
+  --line: #2a2a2a;
+  --focus: #F2D675;
+  --brand: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", Verdana, system-ui, sans-serif;
+  --scale: 1;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--body); font-size: calc(18px * var(--scale)); line-height: 1.55;
+  padding-top: max(24px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(18px, env(safe-area-inset-left, 0px));
+  padding-right: max(18px, env(safe-area-inset-right, 0px));
+  min-height: 100vh;
+}
+.wrap { max-width: 40rem; margin: 0 auto; display: grid; gap: 28px; }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.wordmark { font-family: var(--brand); font-weight: 600; font-size: 1.9rem; letter-spacing: 0.14em; color: var(--gold); text-transform: uppercase; }
+.sub { font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; }
+button {
+  font: inherit; font-weight: 600; font-size: 0.95rem; min-height: 48px; padding: 0 18px;
+  border-radius: 999px; border: 2px solid var(--muted); background: transparent; color: var(--fg); cursor: pointer;
+}
+button[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: #0A0A0A; }
+button:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.horizon { display: grid; justify-items: center; gap: 0; padding-top: 8px; }
+.sun { width: 120px; height: 60px; border-radius: 120px 120px 0 0; background: var(--gold); }
+.line { width: min(320px, 80%); height: 3px; background: var(--muted); margin-top: 10px; }
+main { display: grid; gap: 14px; text-align: center; justify-items: center; }
+.date { font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); }
+h1 { font-family: var(--brand); font-weight: 600; font-size: clamp(2.6rem, 9vw, 3.8rem); line-height: 1.05; margin: 0; text-wrap: balance; }
+.message { font-size: clamp(1.3rem, 4vw, 1.6rem); line-height: 1.6; margin: 0; max-width: 32ch; text-wrap: pretty; }
+.try { width: 100%; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--gold); border-radius: 16px; padding: 18px 20px; display: grid; gap: 6px; text-align: left; }
+.try-label { font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.try p { margin: 0; font-size: 1.15rem; font-weight: 600; }
+details { border-top: 1px solid var(--line); padding-top: 18px; }
+summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; color: var(--muted); }
+.past { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 18px; }
+.past li { display: grid; gap: 4px; }
+.pd { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+.pf { font-weight: 800; }
+.past p { margin: 0; color: var(--muted); }
+.install { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; color: var(--muted); font-size: 0.95rem; }
+.install strong { color: var(--fg); font-weight: 600; }
+footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .sun { animation: rise 1.4s ease-out both; }
+  @keyframes rise { from { transform: translateY(14px); opacity: 0.3; } to { transform: none; opacity: 1; } }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="wordmark">Klarity</span><span class="sub">Daily Strength</span></div>
+    <div class="tools">
+      <button id="read" type="button" hidden>Read it to me</button>
+      <button id="bigger" type="button" aria-pressed="false">Bigger text</button>
+    </div>
+  </header>
+
+  <div class="horizon" aria-hidden="true"><div class="sun"></div><div class="line"></div></div>
+
+  <main aria-live="polite">
+    <div class="date" id="date"></div>
+    <h1 id="focus">Today</h1>
+    <p class="message" id="message">Loading today's message.</p>
+    <div class="try" id="tryBox" hidden>
+      <span class="try-label">Try this today</span>
+      <p id="practice"></p>
+    </div>
+  </main>
+
+  <details id="pastWrap" hidden>
+    <summary>Earlier messages</summary>
+    <ul class="past" id="past"></ul>
+  </details>
+
+  <div class="install" id="install" hidden>
+    <strong>Put Klarity on your phone.</strong>
+    <span id="installText"></span>
+  </div>
+
+  <footer>A new message every morning for the Mavagi and EQUIP team.</footer>
+</div>
+
+<script>
+(function () {
+  var el = function (id) { return document.getElementById(id); };
+  var current = null;
+
+  function localISO(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function pretty(iso) {
+    var p = iso.split("-");
+    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  }
+
+  function render(all) {
+    all.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    var today = localISO(new Date());
+    var upTo = all.filter(function (m) { return m.date <= today; });
+    current = upTo.length ? upTo[upTo.length - 1] : all[0];
+    if (!current) { el("message").textContent = "Today's message is on its way. Check back soon."; return; }
+    el("date").textContent = pretty(current.date);
+    el("focus").textContent = current.focus;
+    el("message").textContent = current.message;
+    el("practice").textContent = current.practice || "";
+    el("tryBox").hidden = !current.practice;
+    var past = upTo.filter(function (m) { return m.date < current.date; }).reverse().slice(0, 7);
+    var list = el("past"); list.textContent = "";
+    past.forEach(function (m) {
+      var li = document.createElement("li");
+      var d = document.createElement("span"); d.className = "pd"; d.textContent = pretty(m.date);
+      var f = document.createElement("span"); f.className = "pf"; f.textContent = m.focus;
+      var p = document.createElement("p"); p.textContent = m.message;
+      li.append(d, f, p); list.appendChild(li);
+    });
+    el("pastWrap").hidden = past.length === 0;
+    el("read").hidden = !canSpeak;
+  }
+
+  fetch("messages.json", { cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(render)
+    .catch(function () { el("message").textContent = "Can't load today's message. Check your connection and try again."; });
+
+  // Bigger text, remembered on this phone
+  var big = false;
+  try { big = localStorage.getItem("klarity-big") === "1"; } catch (e) {}
+  function applyBig() {
+    document.documentElement.style.setProperty("--scale", big ? "1.25" : "1");
+    el("bigger").setAttribute("aria-pressed", big ? "true" : "false");
+  }
+  applyBig();
+  el("bigger").addEventListener("click", function () {
+    big = !big; applyBig();
+    try { localStorage.setItem("klarity-big", big ? "1" : "0"); } catch (e) {}
+  });
+
+  // Read aloud with the phone's own voice
+  var synth = window.speechSynthesis;
+  var canSpeak = !!(synth && typeof SpeechSynthesisUtterance !== "undefined");
+  var speaking = false;
+  // Prefer a soft female voice. Names differ by phone and computer, so try the best known ones in order.
+  var PREFERRED = ["Samantha (Enhanced)", "Ava (Premium)", "Ava (Enhanced)", "Zoe (Premium)", "Zoe (Enhanced)", "Allison (Enhanced)",
+    "Samantha", "Ava", "Zoe", "Allison", "Susan",
+    "Microsoft Aria Online (Natural)", "Microsoft Jenny Online (Natural)", "Microsoft Ava Online (Natural)", "Microsoft Zira",
+    "Google US English"];
+  var FEMALE = /samantha|ava|zoe|allison|susan|aria|jenny|zira|female|victoria|karen|moira|tessa|serena/i;
+  function pickVoice() {
+    var voices = (synth && synth.getVoices()) || [];
+    var en = voices.filter(function (v) { return /^en[-_]/i.test(v.lang); });
+    for (var i = 0; i < PREFERRED.length; i++) {
+      var hit = en.filter(function (v) { return v.name.indexOf(PREFERRED[i]) === 0; })[0];
+      if (hit) return hit;
+    }
+    return en.filter(function (v) { return FEMALE.test(v.name) && /en[-_]US/i.test(v.lang); })[0]
+      || en.filter(function (v) { return FEMALE.test(v.name); })[0] || null;
+  }
+  if (synth && synth.getVoices) { synth.getVoices(); if ("onvoiceschanged" in synth) synth.onvoiceschanged = function () {}; }
+  el("read").addEventListener("click", function () {
+    var btn = el("read");
+    if (!current) return;
+    if (speaking) { synth.cancel(); speaking = false; btn.textContent = "Read it to me"; return; }
+    var u = new SpeechSynthesisUtterance(current.focus + ". " + current.message + (current.practice ? " Try this today. " + current.practice : ""));
+    u.lang = "en-US"; u.rate = 0.85; u.pitch = 1.05;
+    var v = pickVoice(); if (v) u.voice = v;
+    u.onend = u.onerror = function () { speaking = false; btn.textContent = "Read it to me"; };
+    speaking = true; btn.textContent = "Stop reading";
+    try { synth.speak(u); } catch (e) { speaking = false; btn.textContent = "Read it to me"; }
+  });
+
+  // How to install, shown only in the browser (not once installed)
+  var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  if (!standalone) {
+    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    el("installText").textContent = ios
+      ? " Tap the Share button, then tap Add to Home Screen."
+      : " Tap the menu (three dots), then tap Add to Home screen or Install app.";
+    el("install").hidden = false;
+  }
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+})();
+</script>
+</body>
+</html>

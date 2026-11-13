@@ -1,8 +1,8 @@
 name: Make message audio
-# When messages.json changes, record any new messages in the natural voice and save them to audio/.
+# When messages.json changes, record any new messages in the natural voices (English and Spanish) and save them to audio/.
 on:
   push:
-    paths: ["messages.json"]
+    paths: ["messages.json", "tools/make_audio.py"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -21,6 +21,7 @@ jobs:
           mkdir -p /tmp/tts
           curl -sSL -o /tmp/tts/model.onnx https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx
           curl -sSL -o /tmp/tts/af_heart.bin https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/voices/af_heart.bin
+          curl -sSL -o /tmp/tts/ef_dora.bin https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/voices/ef_dora.bin
       - name: Make audio
         run: python tools/make_audio.py /tmp/tts
       - name: Save audio

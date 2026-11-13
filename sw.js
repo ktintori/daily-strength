@@ -1,5 +1,5 @@
 // Keeps the app working offline. Messages are checked online first so the newest one shows.
-const CACHE = "klarity-v4";
+const CACHE = "klarity-v5";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
@@ -16,6 +16,7 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
+  if (url.pathname.includes("/audio/")) return; // let audio load straight from the web so phones can play it
   const networkFirst = url.pathname.endsWith("messages.json") || e.request.mode === "navigate";
   if (networkFirst) {
     e.respondWith(

@@ -177,6 +177,7 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
     });
     el("pastWrap").hidden = past.length === 0;
     el("read").hidden = false;
+    if (typeof checkRecs === "function") checkRecs();
   }
 
   // Load messages, and check again whenever the app is opened so a new day shows the new message
@@ -223,13 +224,27 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
     u.onend = u.onerror = idle;
     synth.speak(u);
   }
+  // Check ahead of time which recordings exist, so a tap plays at once (phones block speech that starts late)
+  var hasRec = {};
+  function recUrl(l) { return "audio/" + current.date + (l === "es" ? "-es" : "") + ".mp3"; }
+  function checkRecs() {
+    if (!current || !window.fetch) return;
+    ["en", "es"].forEach(function (l) {
+      var u = recUrl(l);
+      if (!hasRec) hasRec = {};
+      if (u in hasRec) return;
+      hasRec[u] = false;
+      fetch(u, { method: "HEAD", cache: "no-store" }).then(function (r) { hasRec[u] = r.ok; }).catch(function () {});
+    });
+  }
   el("read").addEventListener("click", function () {
     if (!current) return;
     if (playing) { player.pause(); player.currentTime = 0; if (synth) synth.cancel(); idle(); return; }
     playing = true; el("read").textContent = W().stop;
-    // English recording is audio/DATE.mp3, Spanish is audio/DATE-es.mp3; the phone's voice is used if there is no recording
-    player.src = "audio/" + current.date + (lang === "es" && current.es ? "-es" : "") + ".mp3";
-    player.onerror = function () { if (playing) phoneVoice(); };
+    var l = lang === "es" && current.es ? "es" : "en", u = recUrl(l);
+    if (!hasRec[u]) { phoneVoice(); return; }
+    player.src = u;
+    player.onerror = function () { if (playing) idle(); };
     var pr = player.play();
     if (pr && pr.catch) pr.catch(function () { if (playing) phoneVoice(); });
   });

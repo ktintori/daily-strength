@@ -88,6 +88,7 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
   <header>
     <div class="brand"><span class="wordmark">Klarity</span><span class="sub">Daily Strength</span></div>
     <div class="tools">
+      <button id="lang" type="button" lang="es">Español</button>
       <button id="read" type="button" hidden>Read it to me</button>
       <button id="smaller" class="size" type="button" aria-label="Smaller text">A&minus;</button>
       <button id="bigger" class="size" type="button" aria-label="Bigger text">A+</button>
@@ -101,13 +102,13 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
     <h1 id="focus">Today</h1>
     <p class="message" id="message">Loading today's message.</p>
     <div class="try" id="tryBox" hidden>
-      <span class="try-label">Try this today</span>
+      <span class="try-label" id="tryLabel">Try this today</span>
       <p id="practice"></p>
     </div>
   </main>
 
   <details id="pastWrap" hidden>
-    <summary>Earlier messages</summary>
+    <summary id="pastLabel">Earlier messages</summary>
     <ul class="past" id="past"></ul>
   </details>
 
@@ -121,39 +122,57 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
 <script>
 (function () {
   var el = function (id) { return document.getElementById(id); };
-  var current = null;
+  var current = null, all = null;
+
+  // English or Mexican Spanish, remembered on this phone
+  var lang = "en";
+  try { if (localStorage.getItem("klarity-lang") === "es") lang = "es"; } catch (e) {}
+  var WORDS = {
+    en: { tryLabel: "Try this today", past: "Earlier messages", read: "Read it to me", stop: "Stop reading", other: "Español", otherLang: "es",
+          none: "Today's message is on its way. Check back soon.", fail: "Can't load today's message. Check your connection and try again.",
+          ios: " Tap the Share button, then tap Add to Home Screen.", android: " Tap the menu (three dots), then tap Add to Home screen or Install app.",
+          install: "Put Klarity on your phone.", locale: "en-US", speech: "en-US" },
+    es: { tryLabel: "Haz esto hoy", past: "Mensajes anteriores", read: "Léemelo", stop: "Dejar de leer", other: "English", otherLang: "en",
+          none: "El mensaje de hoy viene en camino. Vuelve a revisar pronto.", fail: "No se pudo cargar el mensaje de hoy. Revisa tu conexión e intenta otra vez.",
+          ios: " Toca el botón Compartir y luego toca Agregar a pantalla de inicio.", android: " Toca el menú (tres puntos) y luego toca Agregar a la pantalla principal o Instalar app.",
+          install: "Pon Klarity en tu teléfono.", locale: "es-MX", speech: "es-MX" }
+  };
+  function W() { return WORDS[lang]; }
+  function txt(m) { return lang === "es" && m.es ? m.es : m; }
 
   function localISO(d) {
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
   function pretty(iso) {
     var p = iso.split("-");
-    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(W().locale, { weekday: "long", month: "long", day: "numeric" });
   }
 
-  function render(all) {
+  function render(list0) {
+    all = list0;
     all.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
     var today = localISO(new Date());
     var upTo = all.filter(function (m) { return m.date <= today; });
     current = upTo.length ? upTo[upTo.length - 1] : all[0];
-    if (!current) { el("message").textContent = "Today's message is on its way. Check back soon."; return; }
+    if (!current) { el("message").textContent = W().none; return; }
     // Never run dry: if no message was written for today, bring back an earlier one, a different one each day
     if (current.date < today && upTo.length) {
       var p = today.split("-"), dayNum = Math.floor(Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000);
       current = upTo[dayNum % upTo.length];
     }
     el("date").textContent = pretty(today < current.date ? current.date : today);
-    el("focus").textContent = current.focus;
-    el("message").textContent = current.message;
-    el("practice").textContent = current.practice || "";
+    var c = txt(current);
+    el("focus").textContent = c.focus;
+    el("message").textContent = c.message;
+    el("practice").textContent = c.practice || "";
     el("tryBox").hidden = !current.practice;
     var past = upTo.filter(function (m) { return m.date < today && m !== current; }).reverse().slice(0, 7);
     var list = el("past"); list.textContent = "";
     past.forEach(function (m) {
       var li = document.createElement("li");
       var d = document.createElement("span"); d.className = "pd"; d.textContent = pretty(m.date);
-      var f = document.createElement("span"); f.className = "pf"; f.textContent = m.focus;
-      var p = document.createElement("p"); p.textContent = m.message;
+      var f = document.createElement("span"); f.className = "pf"; f.textContent = txt(m).focus;
+      var p = document.createElement("p"); p.textContent = txt(m).message;
       li.append(d, f, p); list.appendChild(li);
     });
     el("pastWrap").hidden = past.length === 0;
@@ -166,7 +185,7 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
     fetch("messages.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (all) { shownDay = localISO(new Date()); render(all); })
-      .catch(function () { if (!current) el("message").textContent = "Can't load today's message. Check your connection and try again."; });
+      .catch(function () { if (!current) el("message").textContent = W().fail; });
   }
   load();
   function maybeReload() { if (document.visibilityState === "visible") load(); }
@@ -194,20 +213,22 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
   var player = new Audio();
   player.preload = "none";
   var playing = false;
-  function idle() { playing = false; el("read").textContent = "Read it to me"; }
+  function idle() { playing = false; el("read").textContent = W().read; }
   player.addEventListener("ended", idle);
   function phoneVoice() {
     if (!(synth && typeof SpeechSynthesisUtterance !== "undefined")) { idle(); return; }
-    var u = new SpeechSynthesisUtterance(current.focus + ". " + current.message + (current.practice ? " Try this today. " + current.practice : ""));
-    u.lang = "en-US"; u.rate = 0.9;
+    var c = txt(current);
+    var u = new SpeechSynthesisUtterance(c.focus + ". " + c.message + (c.practice ? " " + W().tryLabel + ". " + c.practice : ""));
+    u.lang = W().speech; u.rate = 0.9;
     u.onend = u.onerror = idle;
     synth.speak(u);
   }
   el("read").addEventListener("click", function () {
     if (!current) return;
     if (playing) { player.pause(); player.currentTime = 0; if (synth) synth.cancel(); idle(); return; }
-    playing = true; el("read").textContent = "Stop reading";
-    player.src = "audio/" + current.date + ".mp3";
+    playing = true; el("read").textContent = W().stop;
+    // English recording is audio/DATE.mp3, Spanish is audio/DATE-es.mp3; the phone's voice is used if there is no recording
+    player.src = "audio/" + current.date + (lang === "es" && current.es ? "-es" : "") + ".mp3";
     player.onerror = function () { if (playing) phoneVoice(); };
     var pr = player.play();
     if (pr && pr.catch) pr.catch(function () { if (playing) phoneVoice(); });
@@ -217,11 +238,28 @@ footer { color: var(--muted); font-size: 0.9rem; text-align: center; }
   var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
   if (!standalone) {
     var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    el("installText").textContent = ios
-      ? " Tap the Share button, then tap Add to Home Screen."
-      : " Tap the menu (three dots), then tap Add to Home screen or Install app.";
     el("install").hidden = false;
   }
+
+  function applyLang() {
+    var w = W();
+    document.documentElement.lang = lang === "es" ? "es-MX" : "en";
+    el("tryLabel").textContent = w.tryLabel;
+    el("pastLabel").textContent = w.past;
+    el("lang").textContent = w.other;
+    el("lang").lang = w.otherLang;
+    el("install").querySelector("strong").textContent = w.install;
+    el("installText").textContent = /iphone|ipad|ipod/i.test(navigator.userAgent) ? w.ios : w.android;
+    if (!playing) el("read").textContent = w.read;
+    if (all) render(all);
+  }
+  el("lang").addEventListener("click", function () {
+    if (playing) { player.pause(); player.currentTime = 0; if (synth) synth.cancel(); idle(); }
+    lang = lang === "es" ? "en" : "es";
+    try { localStorage.setItem("klarity-lang", lang); } catch (e) {}
+    applyLang();
+  });
+  applyLang();
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
